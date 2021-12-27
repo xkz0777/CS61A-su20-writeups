@@ -52,7 +52,7 @@ def largest_factor(x):
     1
     """
     "*** YOUR CODE HERE ***"
-    for i in range(x - 1, 0):
+    for i in range(x - 1, 0, -1):
         if x % i == 0:
             return i
 
