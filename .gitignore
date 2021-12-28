@@ -1,2 +1,6 @@
 *.md
 source_code
+**/__pycache__
+**/*ok*
+**/construct_check.py
+**/tests
