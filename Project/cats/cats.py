@@ -191,7 +191,10 @@ def time_per_word(times_per_player, words):
     "*** YOUR CODE HERE ***"
     times = []
     for timestamps in times_per_player:
-        times.append([timestamps[i] - timestamps[i - 1] for i in range(1, len(timestamps))])
+        times.append([
+            timestamps[i] - timestamps[i - 1]
+            for i in range(1, len(timestamps))
+        ])
     return game(words, times)
     # END PROBLEM 9
 
@@ -287,7 +290,8 @@ def key_distance_diff(start, goal, limit):
     else:
         add_diff = 1 + key_distance_diff(start, goal[1:], limit - 1)
         remove_diff = 1 + key_distance_diff(start[1:], goal, limit - 1)
-        substitute_diff = key_distance[start[0], goal[0]] + key_distance_diff(start[1:], goal[1:], limit - 1)
+        substitute_diff = key_distance[start[0], goal[0]] + key_distance_diff(
+            start[1:], goal[1:], limit - 1)
         return min(add_diff, remove_diff, substitute_diff)
     # END PROBLEM EC1
 
@@ -304,7 +308,8 @@ def memo(f):
 
     return memoized
 
-key_distance_diff = memo(key_distance_diff) # For Case1
+
+key_distance_diff = memo(key_distance_diff)  # For Case1
 key_distance_diff = count(key_distance_diff)
 corrected_words = {}
 memoized_functions = {}
@@ -314,6 +319,8 @@ memoized_functions = {}
 1. memoize `diff_function` (Already done before)
 2. save the words we already called `faster_autocorrect` on
 '''
+
+
 def faster_autocorrect(user_word, valid_words, diff_function, limit):
     """A memoized version of the autocorrect function implemented above."""
     # BEGIN PROBLEM EC2
@@ -326,13 +333,16 @@ def faster_autocorrect(user_word, valid_words, diff_function, limit):
     elif (user_word, diff_function) in corrected_words:
         return corrected_words[(user_word, diff_function)]
     else:
-        min_diff_word = min(valid_words, key=lambda word: diff_function(user_word, word, limit))
+        min_diff_word = min(
+            valid_words,
+            key=lambda word: diff_function(user_word, word, limit))
         if diff_function(user_word, min_diff_word, limit):
             corrected_words[(user_word, diff_function)] = min_diff_word
         else:
             corrected_words[(user_word, diff_function)] = user_word
         return corrected_words[(user_word, diff_function)]
     # END PROBLEM EC2
+
 
 ##########################
 # Command Line Interface #

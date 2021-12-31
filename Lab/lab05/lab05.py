@@ -23,8 +23,7 @@ def riffle(deck):
 
 
 def berry_finder(t):
-    """Returns True if t contains a node with the value 'berry' and 
-    False otherwise.
+    """Returns True if t contains a node with the value 'berry' and False otherwise.
 
     >>> scrat = tree('berry')
     >>> berry_finder(scrat)
@@ -43,7 +42,6 @@ def berry_finder(t):
     if label(t) == 'berry':
         return True
     return any([berry_finder(branch) for branch in branches(t)])
-
 
 
 def sprout_leaves(t, leaves):
@@ -246,10 +244,6 @@ def random_sent():
 def sent():
     return construct_sent('The', table)
 
-
-def random_sent():
-    import random
-    return construct_sent(random.choice(table['.']), table)
 
 # Tree ADT
 
