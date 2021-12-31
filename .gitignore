@@ -6,3 +6,5 @@ source_code
 **/tests
 Slices
 Discussion
+.*
+*.cfg
