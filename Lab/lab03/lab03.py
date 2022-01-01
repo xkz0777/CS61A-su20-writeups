@@ -1,4 +1,4 @@
-HW_SOURCE_FILE=__file__
+HW_SOURCE_FILE = __file__
 
 
 def pascal(row, column):
@@ -21,9 +21,12 @@ def pascal(row, column):
 
 def compose1(f, g):
     """"Return a function h, such that h(x) = f(g(x))."""
+
     def h(x):
         return f(g(x))
+
     return h
+
 
 def repeated(f, n):
     """Return the function that computes the nth application of func (recursively!).
@@ -110,22 +113,31 @@ def pingpong(n):
     True
     """
     "*** YOUR CODE HERE ***"
-    def successor(n, direction):
-        '''
-        DIRECTION is 0 when counting up, 1 otherwise
-        return the successor of n
-        '''
-        return n - 1 if direction else n + 1
 
-    def switch(direction):
-        '''Switch diretion'''
-        return 0 if direction else 1
+    # def successor(n, direction):
+    #     '''
+    #     DIRECTION is 0 when counting up, 1 otherwise
+    #     return the successor of n
+    #     '''
+    #     return n - 1 if direction else n + 1
 
-    def search(value, index, target_index, direction):
-        if index == target_index:
-            return value
-        elif num_eights(index) or index % 8 == 0:
-            return search(successor(value, switch(direction)), index + 1, target_index, switch(direction))
-        else:
-            return search(successor(value, direction), index + 1, target_index, direction)
-    return search(1, 1, n, 0)
+    # def switch(direction):
+    #     '''Switch diretion'''
+    #     return 0 if direction else 1
+
+    # def search(value, index, target_index, direction):
+    #     if index == target_index:
+    #         return value
+    #     elif num_eights(index) or index % 8 == 0:
+    #         return search(successor(value, switch(direction)), index + 1, target_index, switch(direction))
+    #     else:
+    #         return search(successor(value, direction), index + 1, target_index, direction)
+    # return search(1, 1, n, 0)
+    def direction(n):
+        if n <= 8:
+            return 0
+        return 1 - direction(n - 1) if num_eights(n - 1) or (n - 1) % 8 == 0 else direction(n - 1)
+
+    if n <= 8:
+        return n
+    return pingpong(n - 1) - 1 if direction(n) else pingpong(n - 1) + 1

@@ -53,12 +53,10 @@ def double_eights(n):
     False
     """
     "*** YOUR CODE HERE ***"
-    current = -1
-    last = -1
+    current, last = -1, -1
     while n:
         last = current
-        current = n % 10
+        current, n = n % 10, n // 10
         if current == 8 and last == 8:
             return True
-        n //= 10
     return False

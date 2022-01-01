@@ -20,6 +20,7 @@ def composer(func=lambda x: x):
     >>> f3(3) # should be 1 + (2 * (3 + 1)) = 9
     9
     """
+
     def func_adder(g):
         "*** YOUR CODE HERE ***"
         return composer(lambda x: func(g(x)))

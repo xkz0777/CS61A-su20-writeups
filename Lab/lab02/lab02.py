@@ -47,12 +47,7 @@ def count_cond(condition):
     "*** YOUR CODE HERE ***"
 
     def count_fn(n):
-        i, count = 1, 0
-        while i <= n:
-            if condition(n, i):
-                count += 1
-            i += 1
-        return count
+        return sum([condition(n, i) for i in range(1, n + 1)])
 
     return count_fn
 

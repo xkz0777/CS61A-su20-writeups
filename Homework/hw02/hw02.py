@@ -8,8 +8,7 @@ triple = lambda x: 3 * x
 
 increment = lambda x: x + 1
 
-
-HW_SOURCE_FILE=__file__
+HW_SOURCE_FILE = __file__
 
 
 def product(n, term):
@@ -35,7 +34,6 @@ def product(n, term):
     while i <= n:
         res, i = res * term(i), i + 1
     return res
-
 
 
 def accumulate(combiner, base, n, term):
@@ -66,6 +64,7 @@ def accumulate(combiner, base, n, term):
         base = combiner(term(i), base)
         i += 1
     return base
+
 
 def summation_using_accumulate(n, term):
     """Returns the sum of term(1) + ... + term(n). The implementation
@@ -104,9 +103,13 @@ def product_using_accumulate(n, term):
 
 def compose1(func1, func2):
     """Return a function f, such that f(x) = func1(func2(x))."""
+
     def f(x):
         return func1(func2(x))
+
     return f
+
+
 def make_repeater(func, n):
     """Return the function that computes the nth application of func.
 
@@ -131,28 +134,31 @@ def make_repeater(func, n):
         i += 1
     return f
     '''
-    return accumulate(compose1, identity, n, lambda x: func)
-    
+    return accumulate(compose1, identity, n, lambda _: func)
 
 
 def zero(f):
     return lambda x: x
 
+
 def successor(n):
     return lambda f: lambda x: f(n(f)(x))
 
+
 def one(f):
-    """Church numeral 1: same as successor(zero)""" 
+    """Church numeral 1: same as successor(zero)"""
     "*** YOUR CODE HERE ***"
     return lambda x: f(x)
 
 
 def two(f):
-    """Church numeral 2: same as successor(successor(zero))""" 
+    """Church numeral 2: same as successor(successor(zero))"""
     "*** YOUR CODE HERE ***"
     return lambda x: f(f(x))
 
+
 three = successor(two)
+
 
 def church_to_int(n):
     """Convert the Church numeral n to a Python integer.
@@ -178,6 +184,7 @@ def add_church(m, n):
     """
     "*** YOUR CODE HERE ***"
     return lambda f: lambda x: m(f)(n(f)(x))
+
 
 def mul_church(m, n):
     """Return the Church numeral for m * n, for Church numerals m and n.

@@ -52,9 +52,7 @@ def largest_factor(x):
     1
     """
     "*** YOUR CODE HERE ***"
-    for i in range(x - 1, 0, -1):
-        if x % i == 0:
-            return i
+    return max(filter(lambda i: x % i == 0, range(1, x)))
 
 
 def if_function(condition, true_result, false_result):
@@ -134,10 +132,7 @@ def hailstone(x):
     length = 1
     print(x)
     while x != 1:
-        if x % 2 == 0:
-            x = x // 2
-        else:
-            x = 3 * x + 1
+        x = 3 * x + 1 if x % 2 else x // 2
         print(x)
         length += 1
     return length
