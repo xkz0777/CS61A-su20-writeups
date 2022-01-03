@@ -4,7 +4,20 @@ def search(query, ranking=lambda r: -r.stars):
 
 def reviewed_both(r, s):
     "Return how many people reviewed both"
-    return len([p for p in r.reviewers if p in s.reviewers])
+    "both list are sorted"
+    def sorted_overlap(s, t):
+        "s and t are both sorted, return the common terms"
+        i, j, count = 0, 0, 0
+        while i < len(s) and j < len(t):
+            if s[i] == t[j]:
+                count += 1
+                i, j = i + 1, j + 1
+            elif s[i] < t[j]:
+                i = i + 1
+            else:
+                j = j + 1
+        return count
+    return sorted_overlap(r.reviewers, s.reviewers)
 
 class Restaurant:
     all = []
@@ -18,13 +31,10 @@ class Restaurant:
         "Return the k most similar restaurants to self"
         others = list(Restaurant.all)
         others.remove(self)
-        return sorted(others, key=lambda r: similarity(self, r), reverse=True)[:k]
+        return sorted(others, key=lambda r: -similarity(self, r))[:k]
 
     def __repr__(self):
-        return "Restaurant('{0}', '{1}')".format(self.name, self.stars)
-
-    def __str__(self):
-        return '<' + self.name + ',' + str(self.stars) + '>'
+        return '<' + self.name + '>'
 
 import json
 
@@ -39,11 +49,13 @@ for line in open('reviews.json'):
 
 for line in open('restaurants.json'):
     r = json.loads(line)
-    reviewers = reviewers_for_restaurants.get(r['business_id'])
-    Restaurant(r['name'], r["stars"], reviewers)
+    reviewers = reviewers_for_restaurants.get(r['business_id'], [])
+    Restaurant(r['name'], r["stars"], sorted(reviewers))
 
-results = search('Thai');
-for r in results:
-    print(r, 'is similar to', r.similar(3))
+while True:
+    print('>', end = ' ')
+    results = search(input().strip())
+    for r in results:
+        print(r, 'share reviewers with', r.similar(5))
 
 
