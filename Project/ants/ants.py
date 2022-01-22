@@ -602,7 +602,9 @@ def apply_status(status, bee, length):
     "*** YOUR CODE HERE ***"
     # Marvelous implementation! Making it works like stack:
     # Every time `apply_status` is called, a new `action` function will be created and bound to the `bee` object
-    # and the last function created is recorded in `original_action`.
+    # and the last function created is recorded in `original_action`
+    # Meanwhile, each time `apply_status` is called, it will create a new frame, binding the length to this frame,
+    # which can record the length as well.
     original_action = bee.action
     new_action = status(bee.action, bee)
 
@@ -653,7 +655,6 @@ class LaserAnt(ThrowerAnt):
     food_cost = 10
     implemented = True  # Change to True to view in the GUI
 
-
     def __init__(self, armor=1):
         ThrowerAnt.__init__(self, armor)
         self.insects_shot = 0
@@ -664,7 +665,7 @@ class LaserAnt(ThrowerAnt):
         place = self.place
         distance = 0
         while place != beehive:
-            if place.ant is not None and place.ant is not`` self:
+            if place.ant is not None and place.ant is not self:
                 insects_and_distances[place.ant] = distance
             for bee in place.bees:
                 insects_and_distances[bee] = distance
