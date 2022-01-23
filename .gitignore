@@ -8,4 +8,5 @@ source_code
 Slices
 Discussion
 .*
-*.cfg
+**/editor
+**/scheme
