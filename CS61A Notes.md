@@ -973,6 +973,227 @@ True
 13
 ```
 
+## Scheme
+
+### Expressions
+
+#### Atomic Expressions
+
+Just like in Python, atomic, or primitive, expressions in Scheme take a single step to evaluate. These include numbers, booleans, symbols.
+
+```scheme
+scm> 1234    ; integer
+1234
+scm> 123.4   ; real number
+123.4
+```
+
+#### Symbols
+
+Out of these, the symbol type is the only one we didn't encounter in Python. A symbol acts a lot like a Python name, but not exactly. Specifically, a symbol in Scheme is also a type of value. On the other hand, in Python, names only serve as expressions; a Python expression can never evaluate to a name.
+
+```scheme
+scm> quotient      ; A name bound to a built-in procedure
+#[quotient]
+scm> 'quotient     ; An expression that evaluates to a symbol
+quotient
+scm> 'hello-world!
+hello-world!
+```
+
+#### Booleans
+
+In Scheme, all values except the special boolean value `#f` are interpreted as true values (unlike Python, where there are some false-y values like `0`). Our particular version of the Scheme interpreter allows you to write `True` and `False` in place of `#t` and `#f`. This is not standard.
+
+```scheme
+scm> #t
+#t
+scm> #f
+#f
+```
+
+#### Call expressions
+
+Like Python, the operator in a Scheme call expression comes before all the operands. Unlike Python, **the operator is included within the parentheses and the operands are separated by spaces rather than with commas.** However, evaluation of a Scheme call expression follows the exact same rules as in Python:
+
+1. Evaluate the operator. It should evaluate to a **procedure**.
+2. Evaluate the operands, left to right.
+3. Apply the procedure to the evaluated operands.
+
+Here are some examples using built-in procedures:
+
+```scheme
+scm> (+ 1 2)
+3
+scm> (- 10 (/ 6 2))
+7
+scm> (modulo 35 4)
+3
+scm> (even? (quotient 45 2))
+#t
+```
+
+#### if Expressions
+
+The `if` special form allows us to evaluate one of two expressions based on a predicate. It takes in two required arguments and an optional third argument:
+
+```scheme
+(if <predicate> <if-true> [if-false])
+```
+
+The Scheme `if` expression, given that it is an expression, **evaluates to some value**. However, the Python `if` statement **simply directs the flow of the program.**
+
+Another difference between the two is that it's possible to add more lines of code into the suites of the Python `if` statement, while a Scheme `if` expression **expects just a single expression for each of the true result and the false result.**
+
+One final difference is that in Scheme, you cannot write `elif` cases. If you want to have multiple cases using the `if` expression, you would need multiple branched `if` expressions.
+
+#### cond Expressions
+
+Using nested `if` expressions doesn't seem like a very practical way to take care of multiple cases. Instead, we can use the `cond` special form, a general conditional expression similar to a multi-clause if/elif/else conditional expression in Python. `cond` takes in an arbitrary number of arguments known as **clauses**. **A clause is written as a list containing two expressions: `(<p> <e>)`.**
+
+```scheme
+(cond
+    (<p1> <e1>)
+    (<p2> <e2>)
+    ...
+    (<pn> <en>)
+    [(else <else-expression>)])
+```
+
+The first expression in each clause is a predicate. The second expression in the clause is the return expression corresponding to its predicate. The optional `else` clause has no predicate.
+
+The rules of evaluation are as follows:
+
+1. Evaluate the predicates `<p1>`, `<p2>`, ..., `<pn>` in order until you reach one that evaluates to a truth-y value.
+2. If you reach a predicate that evaluates to a truth-y value, evaluate and return the corresponding expression in the clause.
+3. If none of the predicates are truth-y and there is an `else` clause, evaluate and return `<else-expression>`.
+
+### Lists
+
+Scheme lists are very similar to the linked lists. A Scheme list is constructed with a series of pairs, which are created with the constructor `cons`. It require that the `cdr` is either another list or `nil`, an empty list. A list is displayed in the interpreter as a sequence of values (similar to the `__str__` representation of a `Link` object).
+
+```scheme
+scm> (define a (cons 1 (cons 2 (cons 3 nil))))  ; Assign the list to the name a
+a
+scm> a
+(1 2 3)
+scm> (car a)
+1
+scm> (cdr a)
+(2 3)
+scm> (car (cdr (cdr a)))
+3
+```
+
+There are a few other ways to create lists. **The `list` procedure** takes in an arbitrary number of arguments and constructs a list with the values of these arguments:
+
+```scheme
+scm> (list 1 2 3)
+(1 2 3)
+scm> (list 1 (list 2 3) 4)
+(1 (2 3) 4)
+scm> (list (cons 1 (cons 2 nil)) 3 4)
+((1 2) 3 4)
+```
+
+Note that all of the operands in this expression are evaluated before being put into the resulting list.
+
+We can also use the quote form to create a list, which will construct the exact list that is given. Unlike with the `list` procedure, the argument to `'` is not evaluated.
+
+```scheme
+scm> '(1 2 3)
+(1 2 3)
+scm> '(cons 1 2) ; Argument to quote is not evaluated
+(cons 1 2)
+scm> '(1 (2 3 4))
+(1 (2 3 4))
+```
+
+There are a few other built-in procedures in Scheme that are used for lists.
+
+```scheme
+scm> (null? nil)                ; Checks if a value is the empty list
+True
+scm> (append '(1 2 3) '(4 5 6)) ; Concatenates two lists
+(1 2 3 4 5 6)
+scm> (length '(1 2 3 4 5))      ; Returns the number of elements in a list
+5
+```
+
+### Define procedures
+
+The special form `define` is used to define variables and functions in Scheme. There are two versions of the `define` special form. To define variables, we use the `define` form with the following syntax:
+
+```scheme
+(define <name> <expression>)
+```
+
+The rules to evaluate this expression are
+
+1. Evaluate the `<expression>`.
+2. Bind its value to the `<name>` in the current frame.
+3. Return `<name>`.
+
+The second version of `define` is used to define procedures:
+
+```scheme
+(define (<name> <param1> <param2> ...) <body> )
+```
+
+To evaluate this expression:
+
+1. **Create a lambda procedure with the given parameters** and `<body>`.
+2. Bind the procedure to the `<name>` in the current frame.
+3. Return `<name>`.
+
+The following two expressions are equivalent:
+
+```scheme
+scm> (define foo (lambda (x y) (+ x y)))
+foo
+scm> (define (foo x y) (+ x y))
+foo
+```
+
+### Lambdas
+
+All Scheme procedures are lambda procedures. To create a lambda procedure, we can use the `lambda` special form:
+
+```scheme
+(lambda (<param1> <param2> ...) <body>)
+```
+
+This expression will create and return a function with the given parameters and body, but it will not alter the current environment.
+
+The function will **simply return the value of the last expression in the body.**
+
+### Sierpinski's Triangle
+
+```scheme
+(define (line len) (fd len))
+
+(define (repeat k fn)
+    (fn)
+    (if (> k 1) (repeat (- k 1) fn)))
+
+(define (pentagram len)
+    (repeat 5 (lambda () (line len) (rt 144))))
+
+(define (tri fn)
+    (repeat 3 (lambda () (fn) (lt 120))))
+
+(define (sier d len)
+    (tri (lambda () (if (= d 1) (fd len) (leg d len)))))
+
+(define (leg d len)
+    (sier (- d 1) (/ len 2))
+    (penup) (fd len) (pendown))
+
+(rt 90)
+(speed 0)
+(sier 6 400)
+```
+
 ## Intersting problems in Homework and Lab
 
 ### HW02
@@ -1222,4 +1443,19 @@ for e in zip([10, 9, 8], range(3)):
 ```
 
 Won't be any error. `map` will invoke the lambda function on both elements in the tuple e.
+
+### Lab10
+
+#### WWSD
+
+```scheme
+scm> (cons 1 '(list 2 3))  ; Recall quoting
+(1 list 2 3)
+
+scm> (cons 1 `(list 2 3)) ; Quasiquotes also work as quotes!
+(1 list 2 3)
+
+scm> '(cons 4 (cons (cons 6 8) ()))
+(cons 4 (cons (cons 6 8) ()))
+```
 
