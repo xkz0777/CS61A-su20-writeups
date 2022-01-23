@@ -1,4 +1,5 @@
 *.md
+!CS61A Notes.md
 source_code
 **/__pycache__
 **/*ok*
