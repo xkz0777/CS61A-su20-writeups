@@ -10,3 +10,6 @@ Discussion
 .*
 **/editor
 **/scheme
+!Project/scheme
+**/images
+**/abstract_turtle
