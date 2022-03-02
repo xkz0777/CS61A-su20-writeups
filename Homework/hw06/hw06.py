@@ -1,4 +1,4 @@
-passphrase = '*** PASSPHRASE HERE ***'
+passphrase = 'jlcuxglwetlbxayqlaynnwewo'
 
 
 def survey(p):
@@ -203,13 +203,11 @@ def store_digits(n):
     >>> print("Do not use str or reversed!") if any([r in cleaned for r in ["str", "reversed"]]) else None
     """
     "*** YOUR CODE HERE ***"
-    if n < 10:
-        return Link(n)
-    n1, i = n, 1
-    while n1 // 10:
-        n1 //= 10
-        i *= 10
-    return Link(n1, store_digits(n - n1 * i))
+    res = Link.empty
+    while n:
+        res = Link(n % 10, res)
+        n //= 10
+    return res
 
 
 def path_yielder(t, value):
