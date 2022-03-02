@@ -51,6 +51,7 @@ def interleaved_sum(n, odd_term, even_term):
     True
     """
     "*** YOUR CODE HERE ***"
+
     # Ban % and loop
     def helper(i, odd=True):
         if i == n + 1:
@@ -76,20 +77,16 @@ def mutate_reverse(link):
     Link(3, Link(2, Link(1)))
     """
     "*** YOUR CODE HERE ***"
-    # 直接两遍扫描, 第一遍转成 list, 第二遍再把 list 转回 linked list
-    def reverse_to_lst(link):
-        if link is Link.empty:
-            return []
-        return reverse_to_lst(link.rest) + [link.first]
+    pre = Link(link.first)  # 如果不复制, 按照 C 语言的方式, 逆转完以后 pre 的最后一个节点是 link, 就没法再修改了
+    cur = link.rest
+    while cur is not Link.empty:
+        rest = cur.rest
+        cur.rest = pre
+        pre = cur
+        cur = rest
+    link.first = pre.first
+    link.rest = pre.rest
 
-    def convert_to_linked(lst, link):
-        if lst == []:
-            return Link.empty
-        link.first = lst[0]
-        link.rest = convert_to_linked(lst[1:], link.rest)
-        return link
-
-    convert_to_linked(reverse_to_lst(link), link)
 
 class Tree:
     """
@@ -182,7 +179,8 @@ class Link:
     >>> s.rest.first = 6
     >>> s.rest.rest = Link.empty
     >>> s                                    # Displays the contents of repr(s)
-    Link(5, Link(6))
+    link = Link(1, Link(2, Link(3)))
+    mutate_reverse(link)    Link(5, Link(6))
     >>> s.rest = Link(7, Link(Link(8, Link(9))))
     >>> s
     Link(5, Link(7, Link(Link(8, Link(9)))))
