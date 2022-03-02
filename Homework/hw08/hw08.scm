@@ -1,35 +1,28 @@
 (define (rle s)
-    (define (helper times last s)
-        (if (or (null? s) 
-                (not (= (car s) last)))
-            times
-        (helper (+ times 1) last (cdr-stream s))))
-    (define (remove s last)
+    (define (helper last times s)
         (if (null? s)
-            nil
+            (cons-stream (list last times) nil)
             (if (= last (car s))
-                (remove (cdr-stream s) last)
-                s)))
+                (helper last (+ times 1) (cdr-stream s))
+                (cons-stream 
+                    (list last times) (rle s)))))
+       
     (if (null? s)
         nil
-        (cons-stream 
-            (list (car s) (helper 0 (car s) s))
-            (rle (remove s (car s))))))
+        (helper (car s) 1 (cdr-stream s))))
 
 
 
 (define (group-by-nondecreasing s)
-    (define (helper s last)
-        (if (or (null? s) (< (car s) last))
-            nil
-            (cons (car s) (helper (cdr-stream s) (car s)))))
-    (define (remove s last)
-        (if (or (null? s) (< (car s) last))
-            s
-            (remove (cdr-stream s) (car s))))
+    (define (helper s last group)
+        (if (null? s)
+            (cons-stream group nil)
+            (if (>= (car s) last)
+                (helper (cdr-stream s) (car s) (append group (list (car s))))
+                (cons-stream group (group-by-nondecreasing s)))))
     (if (null? s)
         nil
-        (cons-stream (helper s (car s)) (group-by-nondecreasing (remove s (car s))))))
+        (helper (cdr-stream s) (car s) (list(car s)))))
 
 
 (define finite-test-stream

@@ -27,22 +27,20 @@ CREATE TABLE sizes AS
 -- The size of each dog
 CREATE TABLE size_of_dogs AS
   SELECT name, size FROM dogs, sizes -- 不取别名的话就还叫 name 和 size
-    WHERE min < height
-    AND max >= height;
+    WHERE min < height AND max >= height;
 
 
 -- All dogs with parents ordered by decreasing height of their parent
 CREATE TABLE by_parent_height AS
   SELECT child FROM parents, dogs
     WHERE name = parent 
-        ORDER BY -height;
+      ORDER BY -height;
 
 
 -- Filling out this helper table is optional
 CREATE TABLE siblings AS
   SELECT a.child AS first, b.child AS second FROM parents AS a, parents AS b
-    WHERE a.parent = b.parent
-    AND a.child < b.child;
+    WHERE a.parent = b.parent AND a.child < b.child;
 
 -- Sentences about siblings that are the same size
 CREATE TABLE sentences AS
