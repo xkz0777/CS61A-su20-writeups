@@ -534,7 +534,7 @@ A container can provide an iterator that provides access to its elements in orde
 
 `iter(iterable)`: Return an iterator over the elements of an iterable value.
 
-`next(iterator):` Return the next element in an iterator.
+`next(iterator):` Return the next element in an iterator. Once an iterator has returned all the values in an iterable, subsequent calls to next on that iterable will result in a `StopIteration` exception.
 
 #### Views of a Dictionary
 
@@ -571,7 +571,7 @@ A **generator function** is a function that **yields values instead of returning
 
 A normal function returns once; a generator function can yield multiple times.
 
-When a generator function is called, it **returns a generator that iterates over its yields**.
+When a generator function is called, it **returns a generator object which is a type of iterator.** This generator object iterates over its yields.
 
 A `yield from` statement yields all values from an iterator or iterable.
 
@@ -988,7 +988,7 @@ scm> 123.4   ; real number
 123.4
 ```
 
-#### Symbols
+##### Symbols
 
 Out of these, the symbol type is the only one we didn't encounter in Python. A symbol acts a lot like a Python name, but not exactly. Specifically, a symbol in Scheme is also a type of value. On the other hand, in Python, names only serve as expressions; a Python expression can never evaluate to a name.
 
@@ -1001,7 +1001,7 @@ scm> 'hello-world!
 hello-world!
 ```
 
-#### Booleans
+##### Booleans
 
 In Scheme, all values except the special boolean value `#f` are interpreted as true values (unlike Python, where there are some false-y values like `0`). Our particular version of the Scheme interpreter allows you to write `True` and `False` in place of `#t` and `#f`. This is not standard.
 
@@ -1120,7 +1120,9 @@ scm> (length '(1 2 3 4 5))      ; Returns the number of elements in a list
 5
 ```
 
-### Define procedures
+### Special Form
+
+#### Define procedures
 
 The special form `define` is used to define variables and functions in Scheme. There are two versions of the `define` special form. To define variables, we use the `define` form with the following syntax:
 
@@ -1155,7 +1157,7 @@ scm> (define (foo x y) (+ x y))
 foo
 ```
 
-### Lambdas
+#### Lambdas
 
 All Scheme procedures are lambda procedures. To create a lambda procedure, we can use the `lambda` special form:
 
@@ -1166,6 +1168,21 @@ All Scheme procedures are lambda procedures. To create a lambda procedure, we ca
 This expression will create and return a function with the given parameters and body, but it will not alter the current environment.
 
 The function will **simply return the value of the last expression in the body.**
+
+#### Quote and Quasiquote
+
+The quote special form takes in a single operand. It returns this operand exactly as is, without evaluating it. Note that this special form can be used to return any value, not just a list.
+
+Similarly, a quasiquote, denoted with a backtick symbol, returns an expression without evaluating it. However, parts of that expression can be unquoted, denoted using a comma, and those unquoted parts are evaluated.
+
+#### =, eq?, equal?
+
++ `=` can only be used for comparing numbers.
++ `eq?` behaves like == in Python for comparing two non-pairs (numbers, booleans,
+    etc.). Otherwise, eq? behaves like is in Python.
++ `equal?` compares pairs by determining if their cars are equal? and their cdrs
+    are equal?(that is, they have the same contents). Otherwise, equal? behaves
+    like eq?
 
 ### Sierpinski's Triangle
 
@@ -1194,11 +1211,238 @@ The function will **simply return the value of the last expression in the body.*
 (sier 6 400)
 ```
 
+### Tail Recursion
+
+Scheme implements tail-call optimization, which allows programmers to write recursive functions that **use a constant amount of space. A tail call occurs when a function calls another function as its last action of the current frame.** In this
+case, the frame is no longer needed, and we can remove it from memory. In other words, **if this is the last thing you are going to do in a function call, we can reuse the current frame instead of making a new frame**.
+
+Consider this implementation of factorial.
+
+```scheme
+(define (fact n)
+	(if (= n 0)
+		1
+		(* n (fact (- n 1)))))
+```
+
+The recursive call occurs in the last line, but it is not the last expression evaluated. After calling `(fact (- n 1))`, the function still needs to multiply that result with n. The final expression that is evaluated is a call to the multiplication function, not
+fact itself. Therefore, the recursive call is not a tail call.
+
+We can rewrite this function using a helper function that remembers the temporary product that we have calculated so far in each recursive step.
+
+```scheme
+(define (fact n)
+	(define (fact-tail n result)
+		(if (= n 0)
+			result
+			(fact-tail (- n 1) (* n result))))
+	(fact-tail n 1))
+```
+
+#### Tail context
+
+When trying to identify whether a given function call within the body of a function is a tail call, we look for whether the call expression is in tail context.
+Given that each of the following expressions is the last expression in the body of the function, the following expressions are tail contexts:
+
++ the second or third operand in an if expression
++ any of the non-predicate sub-expressions in a cond expression (i.e. the second expression of each clause)
++ the last operand in an and or an or expression
++ the last operand in a begin expression’s body
++ the last operand in a let expression’s body
+
+### Macros
+
+```scheme
+scm> (define-macro (twice f) (list 'begin f f))
+twice
+```
+
+`define-macro` allows us to define what’s known as a macro, which is simply a way for us to combine unevaluated input expressions together into another expression. When we call macros, the operands are not evaluated, but rather are treated as
+Scheme data. This means that any operands that are call expressions or special form expression are treated like lists.
+
+The rules for evaluating calls to macro procedures are:
+1. Evaluate operator
+2. Apply operator to unevaluated operands
+3. Evaluate the expression returned by the macro in the frame it was called in
+
+### Streams
+
+Because `cons` is a regular procedure and both its operands must be evaluted before the pair is constructed, we cannot create an infinite sequence of integers using a Scheme list. Instead, our Scheme interpreter supports streams, which are lazy
+Scheme lists. The first element is represented explicitly, but **the rest of the stream’s elements are computed only when needed**. Computing a value only when it’s needed is also known as **lazy evaluation**.
+
+We use the special form `cons-stream` to create a stream. To actually get the rest of the stream, we must call `cdr-stream` on it to force the promise to be evaluated.
+
+Here’s a summary of what we just went over:
+
++ `nil` is the empty stream
++ `cons-stream` constructs a stream containing the value of the first operand and a promise to evaluate the second operand
++ `car` returns the first element of the stream
++ `cdr-stream` computes and returns the rest of stream
+
+## SQL
+
+SQL is an example of a declarative programming language. Statements do not describe computations directly, but instead describe the desired result of some computation. It is the role of the query interpreter of the database system to plan and
+perform a computational process to produce such a result.
+
+In SQL, data is organized into tables. A table has a fixed number of named columns. A row of the table represents a single data record and has one value for each column. Table used in examples below:
+
+| Name            | Division       | Title              | Salary | Supervisor      |
+| --------------- | -------------- | ------------------ | ------ | --------------- |
+| Ben Bitdiddle   | Computer       | Wizard             | 60000  | Oliver Warbucks |
+| Alyssa P Hacker | Computer       | Programmer         | 40000  | Ben Bitdiddle   |
+| Cy D Fect       | Computer       | Programmer         | 35000  | Ben Bitdiddle   |
+| Lem E Tweakit   | Computer       | Technician         | 25000  | Ben Bitdiddle   |
+| Louis Reasoner  | Computer       | Programmer Trainee | 30000  | Alyssa P Hacker |
+| Robert Cratchet | Administration | Big Wheel          | 150000 | Oliver Warbucks |
+| Eben Scrooge    | Accounting     | Chief Accountant   | 75000  | Oliver Warbucks |
+| Robert Cratchet | Accounting     | Scrivener          | 18000  | Eben Scrooge    |
+
+### Creating Tables
+
+We can use a `SELECT` statement to create tables. The following statement creates a table with a single row, with columns named “first" and ”last":
+
+```sqlite
+sqlite> SELECT "Ben" AS first, "Bitdiddle" AS last;
+Ben|Bitdiddle
+```
+
+Given two tables with the same number of columns, we can combine their rows into
+a larger table with `UNION`:
+
+```sqlite
+sqlite> SELECT "Ben" AS first, "Bitdiddle" AS last UNION
+   ...> SELECT "Louis", "Reasoner";
+Ben|Bitdiddle
+Louis|Reasoner
+```
+
+To save a table, use `CREATE TABLE` and a name. Here we’re going to create the table
+of employees from the previous section and assign it to the name records:
+
+```sqlite
+sqlite> CREATE TABLE records AS
+   ...>   SELECT "Ben Bitdiddle" AS name, "Computer" AS division, "Wizard" AS title, 60000 AS salary, "Oliver Warbucks" AS supervisor UNION
+   ...>   SELECT "Alyssa P Hacker", "Computer", "Programmer", 40000, "Ben Bitdiddle" UNION ... ;
+```
+
+We can `SELECT` specific values from an existing table using a `FROM` clause.
+
+The special syntax `SELECT *` will select all columns from a table. It’s an easy way to print the contents of a table.
+
+We can choose which columns to show in the first part of the `SELECT`, we can filter out rows using a `WHERE` clause, and sort the resulting rows with an `ORDER BY` clause (In non-decreasing order by default).
+
+In general the syntax is:
+
+```sqlite
+SELECT [columns] FROM [tables]
+  WHERE [condition] ORDER BY [criteria];
+```
+
+Note that all valid SQL statements must be terminated by a semicolon (;). Additionally, you can split up your statement over many lines and add as much whitespace as you want, much like Scheme.
+
+### Joins
+
+Data are combined by joining multiple tables together into one, a fundamental operation in database systems. There are many methods of joining, all closely related, but we will focus on just one method (the inner join) in this class. When tables are joined, **the resulting table contains a new row for each combination of rows in the input tables**. If two tables are joined and the left table has *m* rows and the right table has *n* rows, then the joined table will have *mn* rows. Joins are expressed in SQL by separating table names by commas in the `FROM` clause of a `SELECT` statement.
+
+SQL allows us to join a table with itself by giving aliases to tables within a `FROM` clause using the keyword `AS` and to refer to a column within a particular table using a dot expression. In the example below we find the name and title of Louis Reasoner’s supervisor.
+
+```sqlite
+sqlite> SELECT b.name, b.title FROM records AS a, records AS b
+   ...>   WHERE a.name = "Louis Reasoner" AND a.supervisor = b.name;
+Alyssa P Hacker | Programmer
+```
+
+### Aggregation
+
+We can use the `MAX`, `MIN`, `COUNT`, and `SUM` functions to retrieve more information from our initial tables.
+
+If we wanted to find the name and salary of the employee who makes the most money, we might say
+
+```sqlite
+sqlite> SELECT name, MAX(salary) FROM records;
+Oliver Warbucks|150000
+```
+
+Using the special `COUNT(*)` syntax, we can count the number of rows in our table to see the number of employees at the company.
+
+```sqlite
+sqlite> SELECT COUNT(*) from RECORDS;
+9
+```
+
+These commands can be performed on specific sets of rows in our table by using the GROUP BY [column name] clause. This clause takes all of the rows that have the same value in column name and groups them together.
+
+We can find the miniumum salary earned in each division of the company.
+
+```sqlite
+sqlite> SELECT division, MIN(salary) FROM records GROUP BY division;
+Computer|25000
+Administration|25000
+Accounting|18000
+```
+
+These groupings can be additionally filtered by the `HAVING` clause. In contrast to the `WHERE` clause, which filters out rows, the `HAVING` clause filters out entire groups.
+
+To find all titles that are held by more than one person, we say
+
+```sqlite
+sqlite> SELECT title FROM records GROUP BY title HAVING count(*) > 1;
+Programmer
+```
+
+### Create Table and Drop Table
+
+Create Empty Table:
+
+```sqlite
+CREATE TABLE numbers(n, note);
+CREATE TABLE numbers(n UNIQUE, note);
+CREATE TABLE numbers(n, note DEFAULT "No Comment");
+```
+
+Drop Table:
+
+```sqlite
+DROP TABLE [IF EXISTS] numbers;
+```
+
+### Modifying Tables
+
+#### INSERT
+
+For a table `t` with two columns, to insert into one column:
+
+```sqlite
+INSERT INTO t(column) VALUES(value);
+```
+
+To insert into both columns:
+
+```sqlite
+INSERT INTO t VALUES(value0, value1);
+```
+
+#### UPDATE
+
+Update sets all entries in certain columns to new values, just for some subset of rows.
+
+```sqlite
+UPDATE numbers SET n = 0 WHERE note = "No Comment";
+```
+
+#### DELETE
+
+Delete removes some or all rows from a table.
+
+```sqlite
+DELETE FROM numbers WHERE n = 0;
+```
+
 ## Intersting problems in Homework and Lab
 
 ### HW02
 
-#### count_cond
+#### Count Cond
 
 (True + True == 2)
 
@@ -1238,7 +1482,7 @@ def count_cond(condition):
     return count_fn
 ```
 
-#### make repeater
+#### Make Repeater
 
 ```python
 def accumulate(combiner, base, n, term):
@@ -1356,7 +1600,7 @@ This time, instead of taking in `f` as `n`'s argument, we take in `m`. `n(m) = m
 
 ### HW03
 
-#### composer
+#### Composer
 
 ```python
 def composer(func=lambda x: x):
@@ -1386,7 +1630,7 @@ def composer(func=lambda x: x):
 
 Obviously, `func_adder` should return the result after calling composer, so we need to think about the function passed in. Notice that it can not be `func(g)`, because the argument of `func` should be just a number, so the answer is `composer(lambda x: func(g(x)))`.
 
-#### anonymous factorial
+#### Anonymous Factorial
 
 ```python
 def make_anonymous_factorial():
@@ -1410,7 +1654,7 @@ Second, since there are no arguments passed in, we need to apply that fact funct
 
 ### HW04
 
-#### preorder traverse
+#### Preorder Traverse
 
 ```python
 def preorder(t):
@@ -1429,9 +1673,441 @@ def preorder(t):
 
 It is a recursive function without any base case, because when `t` is a leave, it has no branches and therefore `branches(t)` would be an empty list.
 
-#### why is par2 better than par1
+#### Why is par2 better than par1
 
 `par1` calculate the summation and product of the two intervals. However, when the sum of two resistors is given, the range of the product is **no longer that large**. Therefore, the result interval given by `par1` is relatively larger comparing to `par2`, which uses the formular written in the form that **no variable that represents an uncertain number is repeated.** Thus, `par2` is a better program.
+
+### HW05
+
+#### Make Joint
+
+We can write a password-protected `make_withdraw` function as below:
+
+```python
+def make_withdraw(balance, password):
+    """Return a password-protected withdraw function.
+
+    >>> w = make_withdraw(100, 'hax0r')
+    >>> w(25, 'hax0r')
+    75
+    >>> error = w(90, 'hax0r')
+    >>> error
+    'Insufficient funds'
+    >>> error = w(25, 'hwat')
+    >>> error
+    'Incorrect password'
+    >>> new_bal = w(25, 'hax0r')
+    >>> new_bal
+    50
+    >>> w(75, 'a')
+    'Incorrect password'
+    >>> w(10, 'hax0r')
+    40
+    >>> w(20, 'n00b')
+    'Incorrect password'
+    >>> w(10, 'hax0r')
+    "Too many incorrect attempts. Attempts: ['hwat', 'a', 'n00b']"
+    >>> w(10, 'l33t')
+    "Too many incorrect attempts. Attempts: ['hwat', 'a', 'n00b']"
+    >>> type(w(10, 'l33t')) == str
+    True
+    """
+    "*** YOUR CODE HERE ***"
+    incorrect_attempts = []
+
+    def withdraw(amount, passwd):
+        nonlocal balance
+        if len(incorrect_attempts) == 3:
+            return f'Too many incorrect attempts. Attempts: {incorrect_attempts}'
+        elif passwd == password:
+            if balance < amount:
+                return 'Insufficient funds'
+            balance -= amount
+            return balance
+        else:
+            incorrect_attempts.append(passwd)
+            return 'Incorrect password'
+
+    return withdraw
+```
+
+This is simple, how about making joint accounts which can be accessed by multiple passwords?
+
+```python
+def make_joint(withdraw, old_pass, new_pass):
+    """Return a password-protected withdraw function that has joint access to
+    the balance of withdraw.
+    
+    >>> w = make_withdraw(100, 'hax0r')
+    >>> w(25, 'hax0r')
+    75
+    >>> make_joint(w, 'my', 'secret')
+    'Incorrect password'
+    >>> j = make_joint(w, 'hax0r', 'secret')
+    >>> w(25, 'secret')
+    'Incorrect password'
+    >>> j(25, 'secret')
+    50
+    >>> j(25, 'hax0r')
+    25
+    >>> j(100, 'secret')
+    'Insufficient funds'
+
+    >>> j2 = make_joint(j, 'secret', 'code')
+    >>> j2(5, 'code')
+    20
+    >>> j2(5, 'secret')
+    15
+    >>> j2(5, 'hax0r')
+    10
+
+    >>> j2(25, 'password')
+    'Incorrect password'
+    >>> j2(5, 'secret')
+    "Too many incorrect attempts. Attempts: ['my', 'secret', 'password']"
+    >>> j(5, 'secret')
+    "Too many incorrect attempts. Attempts: ['my', 'secret', 'password']"
+    >>> w(5, 'hax0r')
+    "Too many incorrect attempts. Attempts: ['my', 'secret', 'password']"
+    >>> make_joint(w, 'hax0r', 'hello')
+    "Too many incorrect attempts. Attempts: ['my', 'secret', 'password']"
+    """
+    "*** YOUR CODE HERE ***"
+    attempt = withdraw(0, old_pass)
+    if type(attempt) == str:
+        return attempt
+
+    def joint_withdraw(amount, passwd):
+        if passwd == new_pass:
+            return withdraw(amount, old_pass)
+        return withdraw(amount, passwd)
+
+    return joint_withdraw
+```
+
+This is a very clever solution. First we need to decide if we should create the joint account. Actually it is the job we have done in `make_withdraw`, so we only need to try withdraw 0$ from the account to see whether or not the password is correct.
+
+Then we need to worry about `joint_withdraw`. It works like a linked list (This is actually a recursive solution).
+
+#### Remainders Generator
+
+```python
+def remainders_generator(m):
+    """
+    Yields m generators. The ith yielded generator yields natural numbers whose
+    remainder is i when divided by m.
+
+    >>> import types
+    >>> [isinstance(gen, types.GeneratorType) for gen in remainders_generator(5)]
+    [True, True, True, True, True]
+    >>> remainders_four = remainders_generator(4)
+    >>> for i in range(4):
+    ...     print("First 3 natural numbers with remainder {0} when divided by 4:".format(i))
+    ...     gen = next(remainders_four)
+    ...     for _ in range(3):
+    ...         print(next(gen))
+    First 3 natural numbers with remainder 0 when divided by 4:
+    4
+    8
+    12
+    First 3 natural numbers with remainder 1 when divided by 4:
+    1
+    5
+    9
+    First 3 natural numbers with remainder 2 when divided by 4:
+    2
+    6
+    10
+    First 3 natural numbers with remainder 3 when divided by 4:
+    3
+    7
+    11
+    """
+    "*** YOUR CODE HERE ***"
+
+    def helper(remainder):
+        i = 0
+        while True:
+            if i * m + remainder:
+                yield i * m + remainder
+            i += 1
+
+    yield from map(lambda i: helper(i), range(m))
+```
+
+The keyword `yield from` makes generator behave like recursive functions.
+
+### HW06
+
+#### Store Digits
+
+```python
+def store_digits(n):
+    """Stores the digits of a positive number n in a linked list.
+
+    >>> s = store_digits(1)
+    >>> s
+    Link(1)
+    >>> store_digits(2345)
+    Link(2, Link(3, Link(4, Link(5))))
+    >>> store_digits(876)
+    Link(8, Link(7, Link(6)))
+    >>> # a check for restricted functions
+    >>> import inspect, re
+    >>> cleaned = re.sub(r"#.*\\n", '', re.sub(r'"{3}[\s\S]*?"{3}', '', inspect.getsource(store_digits)))
+    >>> print("Do not use str or reversed!") if any([r in cleaned for r in ["str", "reversed"]]) else None
+    """
+    "*** YOUR CODE HERE ***"
+    res = Link.empty
+    while n:
+        res = Link(n % 10, res)
+        n //= 10
+    return res
+```
+
+We can use recursion to construct the linked list from front, or we can just contruct it from the back end using iteration, which seems a better way to me.
+
+#### Path Yielder
+
+```python
+def path_yielder(t, value):
+    """Yields all possible paths from the root of t to a node with the label value
+    as a list.
+
+    >>> t1 = Tree(1, [Tree(2, [Tree(3), Tree(4, [Tree(6)]), Tree(5)]), Tree(5)])
+    >>> print(t1)
+    1
+      2
+        3
+        4
+          6
+        5
+      5
+    >>> next(path_yielder(t1, 6))
+    [1, 2, 4, 6]
+    >>> path_to_5 = path_yielder(t1, 5)
+    >>> sorted(list(path_to_5))
+    [[1, 2, 5], [1, 5]]
+
+    >>> t2 = Tree(0, [Tree(2, [t1])])
+    >>> print(t2)
+    0
+      2
+        1
+          2
+            3
+            4
+              6
+            5
+          5
+    >>> path_to_2 = path_yielder(t2, 2)
+    >>> sorted(list(path_to_2))
+    [[0, 2], [0, 2, 1, 2]]
+    """
+    if t.label == value:
+        yield [value]
+    for b in t.branches:
+        for sub_path in path_yielder(b, value):
+            yield [t.label] + sub_path
+```
+
+### HW08
+
+#### Run-Length Encoding
+
+Target: convert given stream s`(1, 1, 1, 1, 1, 6, 6, 6, 6, 2, 5, 5, 5)` to another stream `((1 5), (6 4), (2 1), (5 3))`
+
+At first, I want the body of the procudure works like: 
+
+```scheme
+(cons-stream (something given by helper) (rle s))
+```
+
+However, after calling `helper` to get something like `(1 5)`, `s` doesn't get modified in `rle`, so it won't work, I have to write another helper precudure to remove the previous sequence:
+
+```lisp
+(define (rle s)
+    (define (helper times last s)
+        (if (or (null? s) 
+                (not (= (car s) last)))
+            times
+        (helper (+ times 1) last (cdr-stream s))))
+    (define (remove s last)
+        (if (null? s)
+            nil
+            (if (= last (car s))
+                (remove (cdr-stream s) last)
+                s)))
+    (if (null? s)
+        nil
+        (cons-stream 
+            (list (car s) (helper 0 (car s) s))
+            (rle (remove s (car s))))))
+```
+
+But I can make these two functions call each other to simply the logic:
+
+```lisp
+(define (rle s)
+    (define (helper last times s)
+        (if (null? s)
+            (cons-stream (list last times) nil)
+            (if (= last (car s))
+                (helper last (+ times 1) (cdr-stream s))
+                (cons-stream 
+                    (list last times) (rle s)))))
+       
+    (if (null? s)
+        nil
+        (helper (car s) 1 (cdr-stream s))))
+```
+
+Problem "Group By Nondecreasing" can also be solved like this.
+
+#### Stacks
+
+We have two tables `dogs` and `sizes`:
+
+```sqlite
+CREATE TABLE dogs AS
+  SELECT "abraham" AS name, "long" AS fur, 26 AS height UNION
+  SELECT "barack"         , "short"      , 52           UNION
+  SELECT "clinton"        , "long"       , 47           UNION
+  SELECT "delano"         , "long"       , 46           UNION
+  SELECT "eisenhower"     , "short"      , 35           UNION
+  SELECT "fillmore"       , "curly"      , 32           UNION
+  SELECT "grover"         , "short"      , 28           UNION
+  SELECT "herbert"        , "curly"      , 31;
+
+CREATE TABLE sizes AS
+  SELECT "toy" AS size, 24 AS min, 28 AS max UNION
+  SELECT "mini"       , 28       , 35        UNION
+  SELECT "medium"     , 35       , 45        UNION
+  SELECT "standard"   , 45       , 60;
+```
+
+The goal is to create a two-column table describing all stacks of four dogs at least 170 cm high. The first column should contain a comma-separated list of dogs in the stack, and the second column should contain the total height of the stack. **Order the stacks in increasing order of total height.**
+
+A valid stack of dogs includes each dog only once, and the dogs should be listed in increasing order of height within the stack. You may assume that no two dogs have the same height.
+
+Final output:
+
+```sqlite
+sqlite> SELECT * FROM stacks;
+abraham, delano, clinton, barack|171
+grover, delano, clinton, barack|173
+herbert, delano, clinton, barack|176
+fillmore, delano, clinton, barack|177
+eisenhower, delano, clinton, barack|180
+```
+
+Solution:
+
+```sqlite
+CREATE TABLE stacks_helper(dogs, stack_height, last_height, n);
+
+-- Add your INSERT INTOs here
+INSERT INTO stacks_helper 
+  SELECT name, height, height, 1 FROM dogs; -- 可以直接用数字, 这时不会去找对应的项
+
+INSERT INTO stacks_helper
+  SELECT dogs || ", " || name, height + stack_height, height, 2 FROM dogs, stacks_helper
+    WHERE height > last_height AND n = 1;
+
+INSERT INTO stacks_helper
+  SELECT dogs || ", " || name, height + stack_height, height, 3 FROM dogs, stacks_helper
+    WHERE height > last_height AND n = 2;
+
+INSERT INTO stacks_helper
+  SELECT dogs || ", " || name, height + stack_height, height, 4 FROM dogs, stacks_helper
+    WHERE height > last_height AND n = 3;
+
+CREATE TABLE stacks AS
+  SELECT dogs, stack_height FROM stacks_helper
+    WHERE stack_height >= 170 
+      ORDER BY stack_height;
+```
+
+### HW09
+
+#### Mutate Reverse
+
+In order to write animplementation that requires only linear time in the length of the list ($\Theta n$). The first solution I came up with is to iterate through this list twice. The first time I convert `link` to a Python built-in list, the second time convert that back to linked list.
+
+```python
+def mutate_reverse(link):
+    """Mutates the Link so that its elements are reversed.
+    >>> link = Link(1)
+    >>> mutate_reverse(link)
+    >>> link
+    Link(1)
+    >>> link = Link(1, Link(2, Link(3)))
+    >>> mutate_reverse(link)
+    >>> link
+    Link(3, Link(2, Link(1)))
+    """
+    "*** YOUR CODE HERE ***"
+    def reverse_to_lst(link):
+        if link is Link.empty:
+            return []
+        return reverse_to_lst(link.rest) + [link.first]
+
+    def convert_to_linked(lst, link):
+        if lst == []:
+            return Link.empty
+        link.first = lst[0]
+        link.rest = convert_to_linked(lst[1:], link.rest)
+        return link
+
+    convert_to_linked(reverse_to_lst(link), link)
+```
+
+Notice that the doctest will check for `link` itself is reversed or not, so we can not just reassign link to another reversed list because the linked list object that `link ` points to is not modified
+
+The right way is to directly modify the link passed in `convert_to_linked`.
+
+The second solution is just like reverse the linked list class in language like C:
+
+```python
+def mutate_reverse(link):
+    pre = Link.empty
+    cur = link
+    while cur is not Link.empty:
+        rest = cur.rest
+        cur.rest = pre
+        pre = cur
+        cur = rest
+```
+
+However, this piece of code is incorrect. After the reversal, `link` **becomes the last node** of the reversed linked list, namely `Link(1)` in the example given in the doctest. So I rewrite it:
+
+```python
+def mutate_reverse(link):
+    """Mutates the Link so that its elements are reversed.
+
+    >>> link = Link(1)
+    >>> mutate_reverse(link)
+    >>> link
+    Link(1)
+
+    >>> link = Link(1, Link(2, Link(3)))
+    >>> mutate_reverse(link)
+    >>> link
+    Link(3, Link(2, Link(1)))
+    """
+    "*** YOUR CODE HERE ***"
+    pre = Link(link.first)
+    cur = link.rest
+    while cur is not Link.empty:
+        rest = cur.rest
+        cur.rest = pre
+        pre = cur
+        cur = rest
+    link.first = pre.first
+    link.rest = pre.rest
+```
+
+Creating a new node as the last node, so we can modify `link` at the end of the function.
 
 ### Lab08
 
