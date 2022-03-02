@@ -68,7 +68,7 @@ def make_withdraw(balance, password):
     incorrect_attempts = []
 
     def withdraw(amount, passwd):
-        nonlocal balance, incorrect_attempts
+        nonlocal balance
         if len(incorrect_attempts) == 3:
             return f'Too many incorrect attempts. Attempts: {incorrect_attempts}'
         elif passwd == password:
@@ -240,10 +240,9 @@ def remainders_generator(m):
     "*** YOUR CODE HERE ***"
 
     def helper(remainder):
-        i = 0
+        i = 0 if remainder else 1
         while True:
-            if i * m + remainder:
-                yield i * m + remainder
+            yield i * m + remainder
             i += 1
 
     yield from map(lambda i: helper(i), range(m))
