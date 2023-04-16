@@ -7,6 +7,6 @@ If you would like to contribute your writeup or you find something that could be
 
 Click the links below to see the notes taken by maintainers:
 
-liuly0322: http://home.ustc.edu.cn/~liuly0322/blog/2021/12/23/cs61a/
+liuly0322: <https://blog.liuly.moe/posts/cs61a>
 
-xkz0777: https://xkz0777.github.io/2022/01/01/cs61a-notes/
+xkz0777: <https://xkz0777.github.io/notes/cs61a.html>
